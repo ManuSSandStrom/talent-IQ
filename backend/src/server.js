@@ -23,7 +23,13 @@ const __dirname = path.resolve();
 // middleware
 app.use(express.json());
 // credentials:true meaning?? => server allows a browser to include cookies on request
-const allowedOrigins = [ENV.CLIENT_URL, "http://localhost:5174"];
+const allowedOrigins = [
+  ENV.CLIENT_URL, 
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://frontendtalentiq.netlify.app",
+  "https://talent-iq-backend-h0rb.onrender.com"
+];
 
 app.use(
   cors({
