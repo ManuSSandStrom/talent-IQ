@@ -56,7 +56,7 @@ function useStreamClient(session, loadingSession, isHost, isParticipant, streamT
         await videoCall.join({ create: true });
         setCall(videoCall);
 
-        const apiKey = import.meta.env.VITE_STREAM_API_KEY;
+        const apiKey = import.meta.env.VITE_STREAM_API_KEY || "6uvb6js69wr9";
         chatClientInstance = StreamChat.getInstance(apiKey);
 
         await chatClientInstance.connectUser(
