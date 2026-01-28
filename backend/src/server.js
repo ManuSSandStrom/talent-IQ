@@ -20,9 +20,9 @@ const server = http.createServer(app);
 
 const __dirname = path.resolve();
 
-// middleware
+// Middleware
 app.use(express.json());
-// credentials:true meaning?? => server allows a browser to include cookies on request
+// Allow credentialed requests (cookies/headers) for CORS
 const allowedOrigins = [
   ENV.CLIENT_URL, 
   "http://localhost:5173",

@@ -118,24 +118,7 @@ export async function getSessionById(req, res) {
 export async function joinSession(req, res) {
   try {
     const { id } = req.params;
-    const { guestName } = req.body; // Expect guestName if not logged in
-    
-    // Check if user is authenticated (might be attached by clerkMiddleware if present, 
-    // but we removed protectRoute, so we need to manually check req.auth or similar if we want to support both)
-    // Actually, clerkMiddleware always runs. So req.auth might be there.
-    // Let's rely on req.user which is usually populated by protectRoute.
-    // Since we removed protectRoute, req.user won't be there unless we add logic to fetch it if auth exists.
-    // BETTER APPROACH: Check req.auth (from Clerk) and fetch user if exists.
-    
-    // However, for simplicity and speed:
-    // If client sends a token, Clerk middleware processes it. 
-    // But we need to implement "get user from DB" logic here if we want to support logged-in joining.
-    // Let's assume for now: if user is logged in, the frontend sends the token. 
-    // If we removed protectRoute, we don't have the user object in req.user.
-    // We should probably check `req.auth.userId` (Clerk ID) and fetch user.
-    
-    // Let's try to keep it simple:
-    // We will verify if we can satisfy the request as a GUEST first.
+    const { guestName } = req.body; 
     
     const session = await Session.findById(id);
     if (!session) return res.status(404).json({ message: "Session not found" });
@@ -144,8 +127,7 @@ export async function joinSession(req, res) {
       return res.status(400).json({ message: "Cannot join a completed session" });
     }
 
-    // CHECK IF SESSION IS FULL
-    // Full if: (participant IS SET) OR (guestId IS SET)
+    // Check if session slot is available
     if (session.participant || session.guestId) {
        return res.status(409).json({ message: "Session is full" });
     }
@@ -153,63 +135,39 @@ export async function joinSession(req, res) {
     let userId, clerkId, userName, userImage;
     let isGuest = true;
 
-    // Check if request has authenticated user data (manually handled since we removed protectRoute)
-    // We can rely on req.body.userId if we trust the client? NO.
-    // We will accept `guestName` for guests.
-    // If the frontend is logged in, it should probably call a DIFFERENT endpoint? 
-    // Or we handle both here.
-    
-    // To support "No security", let's prioritize the Guest flow if guestName is provided.
+    // Handle Join Logic (Guest vs Authenticated User)
     if (guestName) {
       isGuest = true;
       userId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       clerkId = userId;
       userName = guestName;
       userImage = `https://ui-avatars.com/api/?name=${guestName}&background=random`;
-    } else {
-       // If no guestName, maybe they are trying to join as authenticated user?
-       // Since protectRoute is gone, we'd need to manually decode/verify. 
-       // ERROR: If we removed protectRoute, req.user is undefined. 
-       // The cleanest way is to require `guestName` for EVERYONE who hits this public endpoint for now, 
-       // OR re-add protectRoute but make it non-blocking (middleware modification).
+    } else if (req.auth && req.auth.userId) {
+       // Authenticated User Join
+       isGuest = false;
+       clerkId = req.auth.userId;
        
-       // Given the user constraint "no security nothing", let's assume EVERYONE joins as a "Guest" 
-       // effectively, or we treat them as such if they don't provide a token.
+       const User = (await import("../models/User.js")).default; 
+       const user = await User.findOne({ clerkId });
        
-       // actually, the user said "login and then directly come". 
-       // So we DO need to support logged in users.
-       
-       // Re-implementing a mini-protectRoute here:
-       // The clerkMiddleware still runs on all routes (in server.js).
-       // So `req.auth` should be available.
-       if (req.auth && req.auth.userId) {
-          // User is logged in with Clerk
-          isGuest = false;
-          clerkId = req.auth.userId;
-          // specific import needed if we want to query User model
-          // We need to import User model
-          const User = (await import("../models/User.js")).default; 
-          const user = await User.findOne({ clerkId });
-          if (user) {
-             userId = user._id;
-             userName = user.name;
-             userImage = user.profileImage;
-             
-             // Host check
-             if (session.host.toString() === userId.toString()) {
-                 // It is the host joining (re-joining)
-                 // We do nothing explicitly specific here, just ensure we don't set them as 'participant' later
-             } else if (session.participant && session.participant.toString() === userId.toString()) {
-                 // User is already the participant, allow re-join
-             } else if (session.participant) {
-                 return res.status(409).json({ message: "Session is full (Participant slot taken)" });
-             } 
-          } else {
-             return res.status(404).json({ message: "User not found" });
-          }
+       if (user) {
+          userId = user._id;
+          userName = user.name;
+          userImage = user.profileImage;
+          
+          // Verify host/participant status
+          if (session.host.toString() === userId.toString()) {
+              // Re-joining as host
+          } else if (session.participant && session.participant.toString() === userId.toString()) {
+              // Re-joining as participant
+          } else if (session.participant) {
+              return res.status(409).json({ message: "Session is full" });
+          } 
        } else {
-          return res.status(400).json({ message: "Guest name is required" });
+          return res.status(404).json({ message: "User not found in database" });
        }
+    } else {
+       return res.status(400).json({ message: "Join failed: Must provide guest name or be authenticated" });
     }
 
     // Upsert to Stream

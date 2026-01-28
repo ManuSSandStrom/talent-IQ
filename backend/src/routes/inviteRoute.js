@@ -45,18 +45,24 @@ router.post("/", protectRoute, async (req, res) => {
     const sessionLink = `${ENV.CLIENT_URL}/session/${sessionId}`;
 
     const mailOptions = {
-      from: ENV.EMAIL_USER,
+      from: `"Talent IQ" <${ENV.EMAIL_USER}>`,
       to: recipientEmail,
-      subject: `Invite to Interview Session from ${hostName}`,
+      subject: `Invitation: Technical Interview Session with ${hostName}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-          <h2 style="color: #3b82f6;">Technical Interview Invitation</h2>
-          <p>Hello,</p>
-          <p><strong>${hostName}</strong> has invited you to join a technical interview session.</p>
-          <p>Please click the button below to join:</p>
-          <a href="${sessionLink}" style="display: inline-block; background-color: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 10px;">Join Session</a>
-          <p style="margin-top: 20px; color: #666;">Or copy this link: <a href="${sessionLink}">${sessionLink}</a></p>
-          <p style="font-size: 12px; color: #999; margin-top: 30px;">Talent IQ Platform</p>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 12px; background-color: #ffffff; color: #333;">
+          <h2 style="color: #2563eb; margin-top: 0; font-size: 24px;">Technical Interview Invitation</h2>
+          <p style="font-size: 16px; line-height: 1.6;">Hello,</p>
+          <p style="font-size: 16px; line-height: 1.6;"><strong>${hostName}</strong> has invited you to participate in a live technical interview session on the Talent IQ platform.</p>
+          
+          <div style="margin: 32px 0;">
+            <a href="${sessionLink}" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Join Interview Session</a>
+          </div>
+          
+          <p style="font-size: 14px; color: #666; margin-bottom: 8px;">If the button above doesn't work, copy and paste this URL into your browser:</p>
+          <p style="font-size: 14px; color: #2563eb; word-break: break-all;"><a href="${sessionLink}" style="color: #2563eb;">${sessionLink}</a></p>
+          
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 32px 0;" />
+          <p style="font-size: 12px; color: #999; text-align: center;">This is an automated message from Talent IQ. Please do not reply to this email.</p>
         </div>
       `,
     };

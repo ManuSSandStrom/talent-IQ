@@ -6,7 +6,7 @@ export const ENV = {
   PORT: process.env.PORT || 5000,
   DB_URL: process.env.DB_URL,
   NODE_ENV: process.env.NODE_ENV || "development",
-  CLIENT_URL: process.env.CLIENT_URL || "https://talent-iq-backend-h0rb.onrender.com",
+  CLIENT_URL: process.env.CLIENT_URL || "https://frontendtalentiq.netlify.app",
   INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
   INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
   STREAM_API_KEY: process.env.STREAM_API_KEY,
