@@ -30,6 +30,9 @@ function App() {
         <Route path="/problems" element={isSignedIn ? <ProblemsPage /> : <RedirectToSignIn />} />
         <Route path="/problem/:id" element={isSignedIn ? <ProblemPage /> : <RedirectToSignIn />} />
         <Route path="/session/:id" element={<SessionPage />} />
+        
+        {/* Catch-all 404 route - redirects to home page */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       <Toaster toastOptions={{ duration: 3000 }} />

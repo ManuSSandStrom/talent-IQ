@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useEndSession, useJoinSession, useSessionById, useAdmitGuest } from "../hooks/useSessions";
@@ -23,6 +23,7 @@ function SessionPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useUser();
+  const { getToken } = useAuth();
   const [output, setOutput] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -92,17 +93,32 @@ function SessionPage() {
 
     setIsSendingInvite(true);
     try {
+      // Get fresh token from Clerk
+      const token = await getToken();
+      
+      if (!token) {
+        toast.error("Authentication error. Please sign in again.");
+        setIsSendingInvite(false);
+        return;
+      }
+
       await axiosInstance.post("/invite", {
         recipientEmail: inviteEmail,
         sessionId: id,
-        hostName: user.firstName + " " + user.lastName,
+        hostName: user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Host",
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
+      
       toast.success("Invitation sent successfully!");
       setIsInviteOpen(false);
       setInviteEmail("");
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to send invitation");
+      console.error("Invite error:", error);
+      const errorMessage = error.response?.data?.message || "Failed to send invitation";
+      toast.error(errorMessage);
     } finally {
       setIsSendingInvite(false);
     }
