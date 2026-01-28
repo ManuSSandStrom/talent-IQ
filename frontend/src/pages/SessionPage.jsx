@@ -173,15 +173,14 @@ function SessionPage() {
     );
   };
 
-  const handleAdmitGuest = async () => {
-     try {
-        await axiosInstance.post(`/sessions/${id}/admit`);
-        toast.success("Guest admitted!");
-        refetch();
-     } catch (err) {
-        toast.error("Failed to admit guest");
-        console.error(err);
-     }
+  const admitGuestMutation = useAdmitGuest();
+
+  const handleAdmitGuest = () => {
+     admitGuestMutation.mutate(id, {
+        onSuccess: () => {
+           refetch();
+        }
+     });
   };
 
   // redirect the "participant" when session ends
@@ -322,8 +321,9 @@ function SessionPage() {
                                 <button 
                                   className="btn btn-sm btn-success"
                                   onClick={handleAdmitGuest}
+                                  disabled={admitGuestMutation.isPending}
                                 >
-                                  Admit
+                                  {admitGuestMutation.isPending ? <Loader2Icon className="animate-spin w-4 h-4"/> : "Admit"}
                                 </button>
                              </div>
                         )}
