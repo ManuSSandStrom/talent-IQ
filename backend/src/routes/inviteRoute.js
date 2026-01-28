@@ -27,12 +27,19 @@ router.post("/", protectRoute, async (req, res) => {
   try {
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false, // Upgrade later with STARTTLS
       auth: {
         user: ENV.EMAIL_USER,
         pass: ENV.EMAIL_PASS,
       },
+      // Force IPv4 and add implementation-level timeouts
+      tls: {
+          rejectUnauthorized: false
+      },
+      family: 4, // Force IPv4
+      connectionTimeout: 10000, // 10s connection timeout
+      socketTimeout: 10000 // 10s socket timeout
     });
 
     const sessionLink = `${ENV.CLIENT_URL}/session/${sessionId}`;
@@ -54,10 +61,10 @@ router.post("/", protectRoute, async (req, res) => {
       `,
     };
 
-    // Add a 10s timeout to prevent hanging
+    // Add a 15s timeout to prevent hanging (slightly longer than connection timeout)
     const sendPromise = transporter.sendMail(mailOptions);
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Email sending timed out after 10 seconds")), 10000)
+      setTimeout(() => reject(new Error("Email sending timed out after 15 seconds")), 15000)
     );
 
     await Promise.race([sendPromise, timeoutPromise]);
@@ -66,10 +73,13 @@ router.post("/", protectRoute, async (req, res) => {
     res.status(200).json({ message: "Invitation sent successfully" });
   } catch (error) {
     console.error("Error sending invite email:", error);
-    // Return appropriate error message
-    const errorMessage = error.message.includes("timed out") 
-      ? "Email server is slow to respond. Please try again." 
-      : "Failed to send invitation email.";
+    
+    let errorMessage = "Failed to send invitation email.";
+    if (error.message.includes("timed out") || error.code === 'ETIMEDOUT') {
+        errorMessage = "Email server connection timed out. Please try again.";
+    } else if (error.code === 'EAUTH') {
+        errorMessage = "Email authentication failed. Check credentials.";
+    }
       
     res.status(500).json({ message: errorMessage, error: error.message });
   }
