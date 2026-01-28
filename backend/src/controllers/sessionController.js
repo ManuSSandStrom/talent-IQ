@@ -311,7 +311,7 @@ export async function endSession(req, res) {
 export const admitGuest = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.auth.userId;
+        const userId = req.user._id.toString(); // Use DB ID, not Clerk ID
 
         const session = await Session.findById(id);
         if (!session) return res.status(404).json({ message: "Session not found" });
@@ -328,6 +328,7 @@ export const admitGuest = async (req, res) => {
         session.guestStatus = "admitted";
         await session.save();
 
+        res.status(200).json({ message: "Guest admitted successfully" });
     } catch (error) {
         console.error("Error in admitGuest controller:", error);
         res.status(500).json({ message: `Internal Server Error: ${error.message}` });
@@ -337,7 +338,7 @@ export const admitGuest = async (req, res) => {
 export const deleteSession = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.auth.userId;
+    const userId = req.user._id.toString(); // Use DB ID, not Clerk ID
 
     const session = await Session.findById(id);
 

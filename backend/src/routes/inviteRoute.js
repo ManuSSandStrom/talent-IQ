@@ -26,7 +26,9 @@ router.post("/", protectRoute, async (req, res) => {
 
   try {
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: {
         user: ENV.EMAIL_USER,
         pass: ENV.EMAIL_PASS,
@@ -52,11 +54,24 @@ router.post("/", protectRoute, async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    // Add a 10s timeout to prevent hanging
+    const sendPromise = transporter.sendMail(mailOptions);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Email sending timed out after 10 seconds")), 10000)
+    );
+
+    await Promise.race([sendPromise, timeoutPromise]);
+    
+    console.log(`Invite sent successfully to ${recipientEmail}`);
     res.status(200).json({ message: "Invitation sent successfully" });
   } catch (error) {
     console.error("Error sending invite email:", error);
-    res.status(500).json({ message: "Failed to send invitation. Check server logs.", error: error.message });
+    // Return appropriate error message
+    const errorMessage = error.message.includes("timed out") 
+      ? "Email server is slow to respond. Please try again." 
+      : "Failed to send invitation email.";
+      
+    res.status(500).json({ message: errorMessage, error: error.message });
   }
 });
 
