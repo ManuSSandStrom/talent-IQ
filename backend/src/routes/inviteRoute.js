@@ -28,34 +28,26 @@ router.post("/", protectRoute, async (req, res) => {
   }
 
   try {
-    // Use Gmail service with more reliable settings for cloud platforms
+    // Log email config (without exposing password)
+    console.log("📧 Email config - User:", ENV.EMAIL_USER);
+    console.log("📧 Email config - Password length:", ENV.EMAIL_PASS?.length);
+    
+    // Simplified Gmail configuration that works better on cloud platforms
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // Use Gmail service shorthand
-      host: "smtp.gmail.com",
-      port: 465, // SSL port (more reliable on cloud platforms)
-      secure: true, // Use SSL
+      service: 'gmail',
       auth: {
         user: ENV.EMAIL_USER,
-        pass: ENV.EMAIL_PASS,
+        pass: ENV.EMAIL_PASS.replace(/\s/g, ''), // Remove any spaces from password
       },
-      tls: {
-        rejectUnauthorized: false,
-        minVersion: 'TLSv1.2'
-      },
-      connectionTimeout: 30000, // 30s connection timeout
-      greetingTimeout: 30000, // 30s greeting timeout
-      socketTimeout: 30000, // 30s socket timeout
-      pool: true, // Use connection pooling
-      maxConnections: 1,
-      maxMessages: 3,
-      rateDelta: 1000,
-      rateLimit: 3
+      // Disable connection pooling for simpler operation
+      pool: false,
+      // Longer timeouts for cloud environments
+      connectionTimeout: 60000,
+      greetingTimeout: 30000,
+      socketTimeout: 60000,
     });
 
-    // Verify transporter configuration
-    console.log("📧 Verifying email transporter...");
-    await transporter.verify();
-    console.log("✅ Email transporter verified successfully");
+    console.log("📧 Transporter created, skipping verify (often fails on cloud)...");
 
     const sessionLink = `${ENV.CLIENT_URL}/session/${sessionId}`;
 
@@ -82,18 +74,16 @@ router.post("/", protectRoute, async (req, res) => {
       `,
     };
 
-    // Add a 45s timeout to prevent hanging
+    // Add a 60s timeout to prevent hanging
+    console.log("📧 Sending email to:", recipientEmail);
     const sendPromise = transporter.sendMail(mailOptions);
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Email sending timed out after 45 seconds")), 45000)
+      setTimeout(() => reject(new Error("Email sending timed out after 60 seconds")), 60000)
     );
 
-    await Promise.race([sendPromise, timeoutPromise]);
+    const result = await Promise.race([sendPromise, timeoutPromise]);
     
-    // Close the connection pool
-    transporter.close();
-    
-    console.log(`✅ Invite sent successfully to ${recipientEmail}`);
+    console.log(`✅ Invite sent successfully to ${recipientEmail}`, result?.messageId);
     res.status(200).json({ message: "Invitation sent successfully" });
   } catch (error) {
     console.error("❌ Error sending invite email:", error);
