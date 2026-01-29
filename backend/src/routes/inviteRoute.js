@@ -28,22 +28,34 @@ router.post("/", protectRoute, async (req, res) => {
   }
 
   try {
+    // Use Gmail service with more reliable settings for cloud platforms
     const transporter = nodemailer.createTransport({
+      service: 'gmail', // Use Gmail service shorthand
       host: "smtp.gmail.com",
-      port: 587,
-      secure: false, // Upgrade later with STARTTLS
+      port: 465, // SSL port (more reliable on cloud platforms)
+      secure: true, // Use SSL
       auth: {
         user: ENV.EMAIL_USER,
         pass: ENV.EMAIL_PASS,
       },
-      // Force IPv4 and add implementation-level timeouts
       tls: {
-          rejectUnauthorized: false
+        rejectUnauthorized: false,
+        minVersion: 'TLSv1.2'
       },
-      family: 4, // Force IPv4
-      connectionTimeout: 10000, // 10s connection timeout
-      socketTimeout: 10000 // 10s socket timeout
+      connectionTimeout: 30000, // 30s connection timeout
+      greetingTimeout: 30000, // 30s greeting timeout
+      socketTimeout: 30000, // 30s socket timeout
+      pool: true, // Use connection pooling
+      maxConnections: 1,
+      maxMessages: 3,
+      rateDelta: 1000,
+      rateLimit: 3
     });
+
+    // Verify transporter configuration
+    console.log("📧 Verifying email transporter...");
+    await transporter.verify();
+    console.log("✅ Email transporter verified successfully");
 
     const sessionLink = `${ENV.CLIENT_URL}/session/${sessionId}`;
 
@@ -70,24 +82,31 @@ router.post("/", protectRoute, async (req, res) => {
       `,
     };
 
-    // Add a 15s timeout to prevent hanging (slightly longer than connection timeout)
+    // Add a 45s timeout to prevent hanging
     const sendPromise = transporter.sendMail(mailOptions);
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Email sending timed out after 15 seconds")), 15000)
+      setTimeout(() => reject(new Error("Email sending timed out after 45 seconds")), 45000)
     );
 
     await Promise.race([sendPromise, timeoutPromise]);
     
-    console.log(`Invite sent successfully to ${recipientEmail}`);
+    // Close the connection pool
+    transporter.close();
+    
+    console.log(`✅ Invite sent successfully to ${recipientEmail}`);
     res.status(200).json({ message: "Invitation sent successfully" });
   } catch (error) {
-    console.error("Error sending invite email:", error);
+    console.error("❌ Error sending invite email:", error);
     
     let errorMessage = "Failed to send invitation email.";
-    if (error.message.includes("timed out") || error.code === 'ETIMEDOUT') {
-        errorMessage = "Email server connection timed out. Please try again.";
-    } else if (error.code === 'EAUTH') {
-        errorMessage = "Email authentication failed. Check credentials.";
+    if (error.message.includes("timed out") || error.code === 'ETIMEDOUT' || error.code === 'ESOCKET') {
+        errorMessage = "Email server connection timed out. The email service may be temporarily unavailable.";
+    } else if (error.code === 'EAUTH' || error.message.includes('Invalid login')) {
+        errorMessage = "Email authentication failed. Please check email credentials.";
+    } else if (error.code === 'ECONNREFUSED') {
+        errorMessage = "Could not connect to email server. Please try again later.";
+    } else if (error.message.includes('verify')) {
+        errorMessage = "Email server verification failed. Please check email configuration.";
     }
       
     res.status(500).json({ message: errorMessage, error: error.message });
