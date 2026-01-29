@@ -6,6 +6,9 @@ import { protectRoute } from "../middleware/protectRoute.js";
 const router = express.Router();
 
 router.post("/", protectRoute, async (req, res) => {
+  console.log("📧 Invite route called");
+  console.log("Request body:", req.body);
+  
   const { recipientEmail, sessionId, hostName } = req.body;
 
   if (!recipientEmail || !sessionId) {

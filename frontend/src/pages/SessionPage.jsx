@@ -102,22 +102,37 @@ function SessionPage() {
         return;
       }
 
-      await axiosInstance.post("/invite", {
+      console.log("Sending invite to:", inviteEmail);
+      
+      const response = await axiosInstance.post("/invite", {
         recipientEmail: inviteEmail,
         sessionId: id,
         hostName: user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Host",
       }, {
         headers: {
           Authorization: `Bearer ${token}`
-        }
+        },
+        timeout: 30000 // 30 second timeout
       });
       
-      toast.success("Invitation sent successfully!");
+      console.log("Invite response:", response.data);
+      toast.success(response.data?.message || "Invitation sent successfully!");
       setIsInviteOpen(false);
       setInviteEmail("");
     } catch (error) {
       console.error("Invite error:", error);
-      const errorMessage = error.response?.data?.message || "Failed to send invitation";
+      
+      let errorMessage = "Failed to send invitation";
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        errorMessage = "Request timed out. Please try again.";
+      } else if (error.response?.status === 401) {
+        errorMessage = "Authentication failed. Please sign in again.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast.error(errorMessage);
     } finally {
       setIsSendingInvite(false);

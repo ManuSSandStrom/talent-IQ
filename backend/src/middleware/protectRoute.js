@@ -4,11 +4,14 @@ import { upsertStreamUser } from "../lib/stream.js";
 
 export const protectRoute = async (req, res, next) => {
   try {
-    if (!req.auth) {
+    // Get auth object - In Clerk Express v5+, req.auth is a function
+    const auth = typeof req.auth === 'function' ? req.auth() : req.auth;
+    
+    if (!auth) {
       return res.status(401).json({ message: "Unauthorized - Auth missing" });
     }
 
-    const { userId } = req.auth;
+    const { userId } = auth;
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized - No Clerk ID" });
