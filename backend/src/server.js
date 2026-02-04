@@ -25,8 +25,6 @@ app.use(express.json());
 // Allow credentialed requests (cookies/headers) for CORS
 const allowedOrigins = [
   ENV.CLIENT_URL, 
-  "http://localhost:5173",
-  "http://localhost:5174",
   "https://frontendtalentiq.netlify.app",
   "https://talent-iq-backend-h0rb.onrender.com"
 ];
