@@ -1,10 +1,10 @@
-<h1 align="center">✨ Talent IQ: A Full-Stack Interview Platform ✨</h1>
+<h1 align="center">✨ AiHire: A Full-Stack Interview Platform ✨</h1>
 
 ![Demo App](/frontend/public/screenshot-for-readme.png)
 
 ## 📖 About the Project
 
-Talent IQ is a comprehensive, full-stack platform designed for conducting remote technical interviews. It provides a real-time, interactive environment where interviewers can assess candidates' coding skills, problem-solving abilities, and communication. The platform integrates live video, a shared code editor, and chat functionalities to simulate an in-person interview experience.
+AiHire is a comprehensive, full-stack platform designed for conducting remote technical interviews. It provides a real-time, interactive environment where interviewers can assess candidates' coding skills, problem-solving abilities, and communication. The platform integrates live video, a shared code editor, and chat functionalities to simulate an in-person interview experience.
 
 ## ✨ Key Features
 
@@ -50,7 +50,7 @@ Talent IQ is a comprehensive, full-stack platform designed for conducting remote
 - **Styling:** Tailwind CSS, DaisyUI
 - **Routing:** React Router
 - **State Management:** TanStack Query (React Query)
--- **Real-time Communication:** Stream.io (Video & Chat)
+  -- **Real-time Communication:** Stream.io (Video & Chat)
 - **Code Editor:** Monaco Editor
 - **Deployment:** Sevalla
 

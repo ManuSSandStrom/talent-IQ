@@ -60,24 +60,32 @@ router.post("/", protectRoute, async (req, res) => {
   const sessionLink = `${ENV.CLIENT_URL}/session/${sessionId}`;
 
   const mailOptions = {
-    from: `"Talent IQ" <${ENV.EMAIL_USER}>`,
+    from: `"AiHire" <${ENV.EMAIL_USER}>`,
     to: recipientEmail,
     subject: `Invitation: Technical Interview Session with ${hostName}`,
     html: `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 12px; background-color: #ffffff; color: #333;">
-        <h2 style="color: #2563eb; margin-top: 0; font-size: 24px;">Technical Interview Invitation</h2>
-        <p style="font-size: 16px; line-height: 1.6;">Hello,</p>
-        <p style="font-size: 16px; line-height: 1.6;"><strong>${hostName}</strong> has invited you to participate in a live technical interview session on the Talent IQ platform.</p>
-        
-        <div style="margin: 32px 0;">
-          <a href="${sessionLink}" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Join Interview Session</a>
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; border: 1px solid #f0f0f0; border-radius: 12px; background-color: #ffffff; color: #333; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <!-- Stylish Gradient Header -->
+        <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%); padding: 30px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: 1px;">AiHire</h1>
+          <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0; font-size: 14px;">Code Together, Hire Better</p>
         </div>
         
-        <p style="font-size: 14px; color: #666; margin-bottom: 8px;">If the button above doesn't work, copy and paste this URL into your browser:</p>
-        <p style="font-size: 14px; color: #2563eb; word-break: break-all;"><a href="${sessionLink}" style="color: #2563eb;">${sessionLink}</a></p>
-        
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 32px 0;" />
-        <p style="font-size: 12px; color: #999; text-align: center;">This is an automated message from Talent IQ. Please do not reply to this email.</p>
+        <div style="padding: 40px;">
+          <h2 style="color: #1f2937; margin-top: 0; font-size: 22px;">Technical Interview Invitation</h2>
+          <p style="font-size: 16px; line-height: 1.6; color: #4b5563;">Hello,</p>
+          <p style="font-size: 16px; line-height: 1.6; color: #4b5563;"><strong>${hostName}</strong> has invited you to participate in a live technical interview session on the <strong>AiHire</strong> platform.</p>
+          
+          <div style="margin: 35px 0; text-align: center;">
+            <a href="${sessionLink}" style="display: inline-block; background: linear-gradient(to right, #4f46e5, #7c3aed); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);">Join Interview Session</a>
+          </div>
+          
+          <p style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">If the button above doesn't work, copy and paste this URL into your browser:</p>
+          <p style="font-size: 14px; color: #4f46e5; word-break: break-all;"><a href="${sessionLink}" style="color: #4f46e5;">${sessionLink}</a></p>
+          
+          <hr style="border: 0; border-top: 1px solid #f3f4f6; margin: 32px 0;" />
+          <p style="font-size: 12px; color: #9ca3af; text-align: center;">This is an automated message from AiHire. Please do not reply to this email.</p>
+        </div>
       </div>
     `,
   };
